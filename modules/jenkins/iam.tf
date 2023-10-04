@@ -56,6 +56,44 @@ resource "aws_iam_policy" "s3_policy" {
   })
 }
 
+resource "aws_iam_policy" "ecr_policy" {
+  description = "Allow Jenkins Instanse to Access s3 Buckets"
+  name        = "${var.environment}-jenkins_ecr_access"
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        "Sid" : "JenkinsECRAccess",
+        "Action" : [
+          "ecr:BatchCheckLayerAvailability",
+          "ecr:BatchGetImage",
+          "ecr:CompleteLayerUpload",
+          "ecr:DeleteRegistryPolicy",
+          "ecr:DeleteRepositoryPolicy",
+          "ecr:DescribeImages",
+          "ecr:DescribeRegistry",
+          "ecr:DescribeRepositories",
+          "ecr:GetAuthorizationToken",
+          "ecr:GetDownloadUrlForLayer",
+          "ecr:GetRepositoryPolicy",
+          "ecr:InitiateLayerUpload",
+          "ecr:ListImages",
+          "ecr:ListTagsForResource",
+          "ecr:PutImage",
+          "ecr:PutImageTagMutability",
+          "ecr:PutLifecyclePolicy",
+          "ecr:PutRegistryPolicy",
+          "ecr:TagResource",
+          "ecr:UploadLayerPart",
+        ],
+        "Effect" : "Allow",
+        "Resource" : [
+          "arn:aws:ecr:*:*:repository/temp*",
+        ]
+      }
+    ]
+  })
+}
 
 /* Attach created policies to Jenkins Role */
 
@@ -63,4 +101,15 @@ resource "aws_iam_role_policy_attachment" "s3_attachment" {
 
   role       = aws_iam_role.jenkins_instance_role.name
   policy_arn = aws_iam_policy.s3_policy.arn
+}
+
+resource "aws_iam_role_policy_attachment" "ecr_attachment" {
+
+  role       = aws_iam_role.jenkins_instance_role.name
+  policy_arn = aws_iam_policy.ecr_policy.arn
+}
+
+
+output "jenkins_iam_role_name" {
+  value = aws_iam_role.jenkins_instance_role.name
 }
